@@ -22,12 +22,11 @@ class _HomePageState extends State<HomePage> {
     _getAllContacts();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Contatos"),
+        title: Text("${contacts.length} Contato(s)"),
         backgroundColor: Colors.red,
         centerTitle: true,
       ),
@@ -64,9 +63,9 @@ class _HomePageState extends State<HomePage> {
                   image: DecorationImage(
                       image: contacts[index].img != null
                           ? FileImage(File(contacts[index].img ??
-                          'sem_diretorio_na_coluna_imgColumn'))
+                              'sem_diretorio_na_coluna_imgColumn'))
                           : const AssetImage("images/avatar.png")
-                      as ImageProvider),
+                              as ImageProvider),
                 ),
               ),
               Padding(
@@ -101,15 +100,86 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       onTap: () {
-        _showContactPage(contact: contacts[index]);
+        _showOptions(context, index);
+      },
+    );
+  }
+
+  void _showOptions(BuildContext context, int index) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return BottomSheet(
+          onClosing: () {},
+          builder: (context) {
+            return Container(
+              padding: EdgeInsets.all(10.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: TextButton(
+                      onPressed: () {},
+                      child: Text(
+                        "Ligar",
+                        style: TextStyle(color: Colors.red, fontSize: 20.0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: TextButton(
+                      onPressed: () {
+                        // fecha o popup antes de ir para próxima pagina
+                        Navigator.pop(context);
+
+                        // navega para pagina do contato
+                        _showContactPage(contact: contacts[index]);
+                      },
+                      child: Text(
+                        "Editar",
+                        style: TextStyle(color: Colors.red, fontSize: 20.0),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: TextButton(
+                      onPressed: () {
+                        // deleta do banco
+                        helper.deleteContact(contacts[index].id!);
+
+                        setState(() {
+                          // fecha popupt de opções
+                          Navigator.pop(context);
+
+                          // remove da lista
+                          contacts.removeAt(index);
+                        });
+                      },
+                      child: Text(
+                        "Excluir",
+                        style: TextStyle(color: Colors.red, fontSize: 20.0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
       },
     );
   }
 
   void _showContactPage({Contact? contact}) async {
-    final recContact = await Navigator.push(context,
-        MaterialPageRoute(builder: (context) => ContactPage(contact: contact,))
-    );
+    final recContact = await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ContactPage(
+                  contact: contact,
+                )));
 
     if (recContact != null) {
       // se for edição de contato
@@ -117,7 +187,8 @@ class _HomePageState extends State<HomePage> {
         await helper.updateContact(recContact);
       } else {
         await helper.saveContact(recContact);
-;      }
+        ;
+      }
 
       _getAllContacts();
     }

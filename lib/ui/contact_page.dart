@@ -34,9 +34,9 @@ class _ContactPageState extends State<ContactPage> {
       _editedContact = Contact.fromMap(widget.contact!.toMap());
 
       // pega os dados do contato passado no parametro e passa para tela
-      _nameController.text = _editedContact!.name!;
-      _emailController.text = _editedContact!.email!;
-      _phoneController.text = _editedContact!.phone!;
+      _nameController.text = _editedContact!.name != null ? _editedContact!.name! : "" ;
+      _emailController.text = _editedContact!.email != null ? _editedContact!.email! : "" ;
+      _phoneController.text = _editedContact!.phone != null ? _editedContact!.phone! : "" ;
     }
   }
 
