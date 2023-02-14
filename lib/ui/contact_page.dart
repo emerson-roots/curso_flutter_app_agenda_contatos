@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:flutter/material.dart';
 
@@ -34,9 +35,12 @@ class _ContactPageState extends State<ContactPage> {
       _editedContact = Contact.fromMap(widget.contact!.toMap());
 
       // pega os dados do contato passado no parametro e passa para tela
-      _nameController.text = _editedContact!.name != null ? _editedContact!.name! : "" ;
-      _emailController.text = _editedContact!.email != null ? _editedContact!.email! : "" ;
-      _phoneController.text = _editedContact!.phone != null ? _editedContact!.phone! : "" ;
+      _nameController.text =
+          _editedContact!.name != null ? _editedContact!.name! : "";
+      _emailController.text =
+          _editedContact!.email != null ? _editedContact!.email! : "";
+      _phoneController.text =
+          _editedContact!.phone != null ? _editedContact!.phone! : "";
     }
   }
 
@@ -80,6 +84,19 @@ class _ContactPageState extends State<ContactPage> {
                                 as ImageProvider),
                   ),
                 ),
+                onTap: () {
+                  ImagePicker()
+                      .pickImage(source: ImageSource.camera)
+                      .then((file) {
+                    if (file == null) {
+                      return;
+                    } else {
+                      setState(() {
+                        _editedContact!.img = file.path;
+                      });
+                    }
+                  });
+                },
               ),
               TextField(
                 controller: _nameController,

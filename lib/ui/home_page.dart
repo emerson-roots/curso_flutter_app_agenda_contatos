@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:agenda_de_contatos/helpers/contact_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'contact_page.dart';
 
@@ -107,70 +108,73 @@ class _HomePageState extends State<HomePage> {
 
   void _showOptions(BuildContext context, int index) {
     showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return BottomSheet(
-          onClosing: () {},
-          builder: (context) {
-            return Container(
-              padding: EdgeInsets.all(10.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "Ligar",
-                        style: TextStyle(color: Colors.red, fontSize: 20.0),
-                      ),
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(25.0),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        builder: (context) {
+          return SizedBox(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: TextButton(
+                    onPressed: () {
+                      launch("tel:${contacts[index].phone}");
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      "Ligar",
+                      style: TextStyle(color: Colors.red, fontSize: 20.0),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: TextButton(
-                      onPressed: () {
-                        // fecha o popup antes de ir para próxima pagina
+                ),
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: TextButton(
+                    onPressed: () {
+                      // fecha o popup antes de ir para próxima pagina
+                      Navigator.pop(context);
+
+                      // navega para pagina do contato
+                      _showContactPage(contact: contacts[index]);
+                    },
+                    child: Text(
+                      "Editar",
+                      style: TextStyle(color: Colors.red, fontSize: 20.0),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: TextButton(
+                    onPressed: () {
+                      // deleta do banco
+                      helper.deleteContact(contacts[index].id!);
+
+                      setState(() {
+                        // fecha popup de opções
                         Navigator.pop(context);
 
-                        // navega para pagina do contato
-                        _showContactPage(contact: contacts[index]);
-                      },
-                      child: Text(
-                        "Editar",
-                        style: TextStyle(color: Colors.red, fontSize: 20.0),
-                      ),
+                        // remove da lista
+                        contacts.removeAt(index);
+                      });
+                    },
+                    child: Text(
+                      "Excluir",
+                      style: TextStyle(color: Colors.red, fontSize: 20.0),
                     ),
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: TextButton(
-                      onPressed: () {
-                        // deleta do banco
-                        helper.deleteContact(contacts[index].id!);
-
-                        setState(() {
-                          // fecha popupt de opções
-                          Navigator.pop(context);
-
-                          // remove da lista
-                          contacts.removeAt(index);
-                        });
-                      },
-                      child: Text(
-                        "Excluir",
-                        style: TextStyle(color: Colors.red, fontSize: 20.0),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+                ),
+              ],
+            ),
+          );
+        });
   }
 
   void _showContactPage({Contact? contact}) async {
