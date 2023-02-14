@@ -29,7 +29,7 @@ class ContactHelper {
 
   Future<Database> initDb() async {
     final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, "contactsnew.db");
+    final path = join(databasesPath, "contactsnew.db3");
 
     return await openDatabase(path, version: 1,
         onCreate: (Database db, int newerVersion) async {
