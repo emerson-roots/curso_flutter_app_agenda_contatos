@@ -5,6 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'contact_page.dart';
 
+enum OrderOptions { ORDER_AZ, ORDER_ZA }
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -30,6 +32,21 @@ class _HomePageState extends State<HomePage> {
         title: Text("${contacts.length} Contato(s)"),
         backgroundColor: Colors.red,
         centerTitle: true,
+        actions: <Widget>[
+          PopupMenuButton<OrderOptions>(
+            itemBuilder: (context) => <PopupMenuEntry<OrderOptions>>[
+              const PopupMenuItem<OrderOptions>(
+                child: Text("Ordernar A-Z"),
+                value: OrderOptions.ORDER_AZ,
+              ),
+              const PopupMenuItem<OrderOptions>(
+                child: Text("Ordernar Z-A"),
+                value: OrderOptions.ORDER_ZA,
+              )
+            ],
+            onSelected: _orderList,
+          )
+        ],
       ),
       backgroundColor: Colors.white,
       floatingActionButton: FloatingActionButton(
@@ -49,6 +66,22 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _orderList(OrderOptions opcaoSelecionada) {
+    switch (opcaoSelecionada) {
+      case OrderOptions.ORDER_AZ:
+        contacts.sort((a, b) {
+          return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+        });
+        break;
+      case OrderOptions.ORDER_ZA:
+        contacts.sort((a, b) {
+          return b.name!.toLowerCase().compareTo(a.name!.toLowerCase());
+        });
+        break;
+    }
+    setState(() {});
+  }
+
   Widget _contactCard(BuildContext context, int index) {
     return GestureDetector(
       child: Card(
@@ -62,6 +95,7 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   image: DecorationImage(
+                      fit: BoxFit.cover,
                       image: contacts[index].img != null
                           ? FileImage(File(contacts[index].img ??
                               'sem_diretorio_na_coluna_imgColumn'))
