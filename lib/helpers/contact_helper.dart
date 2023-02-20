@@ -93,6 +93,23 @@ class ContactHelper {
     return listContact;
   }
 
+  Future<List<Contact>> findContactsByName(String name) async {
+    Database? dbContact = await db;
+    List listMap = await dbContact!.rawQuery("SELECT * FROM $contactTable where $nameColumn like '%$name%'");
+    List<Contact> listContact = [];
+    for (Map m in listMap) {
+      listContact.add(Contact.fromMap(m));
+    }
+    return listContact;
+  }
+
+  Future<bool> isContactRegistered(String name) async {
+    Database? dbContact = await db;
+    List listMap = await dbContact!.query(contactTable, where: '$nameColumn = ?', whereArgs: [ name ]);
+    var isRegistered = listMap.isNotEmpty;
+    return isRegistered;
+  }
+
   Future<int?> getNumber() async {
     Database? dbContact = await db;
     return Sqflite.firstIntValue(

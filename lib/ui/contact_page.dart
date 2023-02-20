@@ -1,6 +1,5 @@
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-
+import 'package:camera_camera/camera_camera.dart';
 import 'package:flutter/material.dart';
 
 import '../helpers/contact_helper.dart';
@@ -8,7 +7,7 @@ import '../helpers/contact_helper.dart';
 class ContactPage extends StatefulWidget {
   final Contact? contact;
 
-  ContactPage({this.contact});
+  const ContactPage({Key? key, this.contact}) : super(key: key);
 
   @override
   State<ContactPage> createState() => _ContactPageState();
@@ -17,6 +16,8 @@ class ContactPage extends StatefulWidget {
 class _ContactPageState extends State<ContactPage> {
   Contact? _editedContact;
   bool _userEdited = false;
+  ContactHelper helper = ContactHelper();
+  String nomeNaPrimeiraInstanciacaoDaPagina = "";
 
   // controladores
   final _nameController = TextEditingController();
@@ -41,6 +42,8 @@ class _ContactPageState extends State<ContactPage> {
           _editedContact!.email != null ? _editedContact!.email! : "";
       _phoneController.text =
           _editedContact!.phone != null ? _editedContact!.phone! : "";
+
+      nomeNaPrimeiraInstanciacaoDaPagina = _nameController.text;
     }
   }
 
@@ -55,50 +58,45 @@ class _ContactPageState extends State<ContactPage> {
           centerTitle: true,
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            if (_editedContact!.name != null &&
-                _editedContact!.name!.isNotEmpty) {
-              Navigator.pop(context, _editedContact);
-            } else {
+          onPressed: () async {
+            var isNameValido = _editedContact!.name != null &&
+                _editedContact!.name!.isNotEmpty;
+            var isPhoneValido = _editedContact!.phone != null &&
+                _editedContact!.phone!.isNotEmpty;
+
+            if (!isNameValido) {
+              await _showMyDialog(context, "Campo obrigatório",
+                  "O nome do contato é obrigatório.");
               FocusScope.of(context).requestFocus(_nameFocus);
+              return;
+            } else if (!isPhoneValido) {
+              await _showMyDialog(context, "Campo obrigatório",
+                  "O número de telefone é obrigatório.");
+              return;
+            } else {
+              var isRegistered =
+                  await helper.isContactRegistered(_editedContact!.name!);
+
+              if (isRegistered &&
+                  nomeNaPrimeiraInstanciacaoDaPagina
+                          .compareTo(_editedContact!.name!) !=
+                      0) {
+                await _showMyDialog(context, "Contato duplicado",
+                    "O contato já está cadastrado.");
+                return;
+              }
+
+              Navigator.pop(context, _editedContact);
             }
           },
-          child: Icon(Icons.save),
           backgroundColor: Colors.red,
+          child: const Icon(Icons.save),
         ),
         body: SingleChildScrollView(
-          padding: EdgeInsets.all(10.0),
+          padding: const EdgeInsets.all(10.0),
           child: Column(
             children: <Widget>[
-              GestureDetector(
-                child: Container(
-                  width: 140.0,
-                  height: 140.0,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: _editedContact?.img != null
-                            ? FileImage(File(_editedContact?.img ??
-                                'sem_diretorio_na_coluna_imgColumn'))
-                            : const AssetImage("images/avatar.png")
-                                as ImageProvider),
-                  ),
-                ),
-                onTap: () {
-                  ImagePicker()
-                      .pickImage(source: ImageSource.camera)
-                      .then((file) {
-                    if (file == null) {
-                      return;
-                    } else {
-                      setState(() {
-                        _editedContact!.img = file.path;
-                      });
-                    }
-                  });
-                },
-              ),
+              _componenteDeFoto(),
               TextField(
                 controller: _nameController,
                 focusNode: _nameFocus,
@@ -108,7 +106,7 @@ class _ContactPageState extends State<ContactPage> {
                     _editedContact?.name = text;
                   });
                 },
-                decoration: InputDecoration(labelText: "Nome"),
+                decoration: const InputDecoration(labelText: "Nome"),
               ),
               TextField(
                 controller: _emailController,
@@ -117,7 +115,7 @@ class _ContactPageState extends State<ContactPage> {
                   _editedContact?.email = text;
                 },
                 keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(labelText: "E-mail"),
+                decoration: const InputDecoration(labelText: "E-mail"),
               ),
               TextField(
                 controller: _phoneController,
@@ -126,12 +124,102 @@ class _ContactPageState extends State<ContactPage> {
                   _editedContact?.phone = text;
                 },
                 keyboardType: TextInputType.phone,
-                decoration: InputDecoration(labelText: "Phone"),
+                decoration: const InputDecoration(labelText: "Phone"),
               )
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _componenteDeFoto() {
+    return Stack(
+      children: <Widget>[
+        Container(
+          width: 140.0,
+          height: 140.0,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+                fit: BoxFit.cover,
+                image: _editedContact?.img != null
+                    ? FileImage(
+                        File(_editedContact?.img ??
+                            'sem_diretorio_na_coluna_imgColumn'),
+                      )
+                    : const AssetImage("images/avatar.png") as ImageProvider),
+          ),
+        ),
+        Positioned(
+          bottom: 8,
+          right: 12,
+          child: Container(
+            width: 35,
+            height: 35,
+            padding: EdgeInsets.zero,
+            decoration: BoxDecoration(
+                border: Border.all(width: 0.7),
+                color: Colors.white,
+                shape: BoxShape.circle),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              iconSize: 26,
+              icon: const Icon(
+                Icons.camera_alt_rounded,
+                color: Colors.blueAccent,
+              ),
+              onPressed: () {
+                openCamera(context);
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void openCamera(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CameraCamera(
+          onFile: (file) {
+            Navigator.pop(context);
+            setState(() {
+              _editedContact!.img = file.path;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showMyDialog(
+      BuildContext context, String titulo, String mensagem) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(titulo),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(mensagem),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 

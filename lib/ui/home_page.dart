@@ -36,12 +36,12 @@ class _HomePageState extends State<HomePage> {
           PopupMenuButton<OrderOptions>(
             itemBuilder: (context) => <PopupMenuEntry<OrderOptions>>[
               const PopupMenuItem<OrderOptions>(
-                child: Text("Ordernar A-Z"),
                 value: OrderOptions.ORDER_AZ,
+                child: Text("Ordernar A-Z"),
               ),
               const PopupMenuItem<OrderOptions>(
-                child: Text("Ordernar Z-A"),
                 value: OrderOptions.ORDER_ZA,
+                child: Text("Ordernar Z-A"),
               )
             ],
             onSelected: _orderList,
@@ -56,13 +56,60 @@ class _HomePageState extends State<HomePage> {
         child: Icon(Icons.add),
         backgroundColor: Colors.red,
       ),
-      body: ListView.builder(
+      body: Column(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: (value) {
+                if (value.isNotEmpty) {
+                  _findContactByName(value);
+                } else {
+                  _getAllContacts();
+                }
+              },
+              decoration: const InputDecoration(
+                labelText: "Pesquisar contato",
+                hintText: "Pesquisar",
+                labelStyle: TextStyle(color: Colors.grey),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Colors.grey,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.red, width: 2.0),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(35.0),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(35.0),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: contacts.length,
+              itemBuilder: (context, index) {
+                return _contactCard(context, index);
+              },
+            ),
+          ),
+        ],
+      ),
+
+      /*ListView.builder(
         padding: EdgeInsets.all(10.0),
         itemCount: contacts.length,
         itemBuilder: (context, index) {
           return _contactCard(context, index);
         },
-      ),
+      ),*/
     );
   }
 
@@ -213,11 +260,13 @@ class _HomePageState extends State<HomePage> {
 
   void _showContactPage({Contact? contact}) async {
     final recContact = await Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => ContactPage(
-                  contact: contact,
-                )));
+      context,
+      MaterialPageRoute(
+        builder: (context) => ContactPage(
+          contact: contact,
+        ),
+      ),
+    );
 
     if (recContact != null) {
       // se for edição de contato
@@ -225,7 +274,6 @@ class _HomePageState extends State<HomePage> {
         await helper.updateContact(recContact);
       } else {
         await helper.saveContact(recContact);
-        ;
       }
 
       _getAllContacts();
@@ -234,6 +282,14 @@ class _HomePageState extends State<HomePage> {
 
   void _getAllContacts() {
     helper.getAllContacts().then((list) {
+      setState(() {
+        contacts = list;
+      });
+    });
+  }
+
+  void _findContactByName(String name) {
+    helper.findContactsByName(name).then((list) {
       setState(() {
         contacts = list;
       });
